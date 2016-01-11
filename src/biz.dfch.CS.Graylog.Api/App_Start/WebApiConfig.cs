@@ -14,6 +14,11 @@ namespace biz.dfch.CS.Graylog.Api
                 routeTemplate: "api/{controller}/{id}",
                 defaults: new { id = RouteParameter.Optional }
             );
+            config.Routes.MapHttpRoute(
+                name: "StreamDateTime",
+                routeTemplate: "api/{controller}/stream/{streamTitle}/{from}/{to}",
+                defaults: new { streamTitle = RouteParameter.Optional, from = RouteParameter.Optional, to = RouteParameter.Optional }
+            );
 
             // Uncomment the following line of code to enable query support for actions with an IQueryable or IQueryable<T> return type.
             // To avoid processing unexpected or malicious queries, use the validation settings on QueryableAttribute to validate incoming queries.

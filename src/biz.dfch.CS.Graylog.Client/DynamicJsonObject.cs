@@ -51,49 +51,56 @@ namespace biz.dfch.CS.Graylog.Client
             bool firstInDictionary = true;
             foreach (KeyValuePair<string, object> pair in values)
             {
-                if (!firstInDictionary)
-                    sb.Append(",");
-                firstInDictionary = false;
                 object value = pair.Value;
-                string name = pair.Key;
-                if (value is string)
+                if (null != value)
                 {
-                    sb.AppendFormat("\"{0}\":\"{1}\"", name, value);
-                }
-                else if (value is IDictionary<string, object>)
-                {
-                    sb.AppendFormat("\"{0}\":", name);
-                    new DynamicJsonObject((IDictionary<string, object>)value).ToJson(sb);
-                }
-                else if (value is ArrayList)
-                {
-                    sb.AppendFormat("\"{0}\":[", name);
-                    bool firstInArray = true;
-                    foreach (object arrayValue in (ArrayList)value)
+                    if (!firstInDictionary)
+                        sb.Append(",");
+                    firstInDictionary = false;
+                    string name = pair.Key;
+                    if (value is string)
                     {
-                        if (!firstInArray)
-                        {
-                            sb.Append(",");
-                        }
-                        firstInArray = false;
-                        if (arrayValue is IDictionary<string, object>)
-                        {
-                            new DynamicJsonObject((IDictionary<string, object>)arrayValue).ToJson(sb);
-                        }
-                        else if (arrayValue is string)
-                        {
-                            sb.AppendFormat("\"{0}\"", arrayValue);
-                        }
-                        else
-                        {
-                            sb.AppendFormat("{0}", arrayValue);
-                        }
+                        sb.AppendFormat("\"{0}\":\"{1}\"", name, value);
                     }
-                    sb.Append("]");
-                }
-                else
-                {
-                    sb.AppendFormat("\"{0}\":{1}", name, value);
+                    else if (value is bool)
+                    {
+                        sb.AppendFormat("\"{0}\":{1}", name, value.ToString().ToLower());
+                    }
+                    else if (value is IDictionary<string, object>)
+                    {
+                        sb.AppendFormat("\"{0}\":", name);
+                        new DynamicJsonObject((IDictionary<string, object>)value).ToJson(sb);
+                    }
+                    else if (value is ArrayList)
+                    {
+                        sb.AppendFormat("\"{0}\":[", name);
+                        bool firstInArray = true;
+                        foreach (object arrayValue in (ArrayList)value)
+                        {
+                            if (!firstInArray)
+                            {
+                                sb.Append(",");
+                            }
+                            firstInArray = false;
+                            if (arrayValue is IDictionary<string, object>)
+                            {
+                                new DynamicJsonObject((IDictionary<string, object>)arrayValue).ToJson(sb);
+                            }
+                            else if (arrayValue is string)
+                            {
+                                sb.AppendFormat("\"{0}\"", arrayValue);
+                            }
+                            else
+                            {
+                                sb.AppendFormat("{0}", arrayValue);
+                            }
+                        }
+                        sb.Append("]");
+                    }
+                    else
+                    {
+                        sb.AppendFormat("\"{0}\":{1}", name, value);
+                    }
                 }
             }
             sb.Append("}");
