@@ -146,6 +146,8 @@
     <Compile Include="GraylogClient.cs" />
     <Compile Include="HttpRequestHandler.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="SearchParameters.cs" />
+    <Compile Include="SortOrder.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="app.config" />
