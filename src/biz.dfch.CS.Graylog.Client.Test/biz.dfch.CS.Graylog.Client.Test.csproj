@@ -54,13 +54,28 @@
   <ItemGroup>
     <Compile Include="DynamicJsonConverterTest.cs" />
     <Compile Include="DynamicObjectTest.cs" />
+    <Compile Include="GraylogClientTest.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="Properties\Settings.Designer.cs">
+      <AutoGen>True</AutoGen>
+      <DesignTimeSharedInput>True</DesignTimeSharedInput>
+      <DependentUpon>Settings.settings</DependentUpon>
+    </Compile>
+    <Compile Include="TestEnvironment.cs" />
+    <Compile Include="TestSettings.cs" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\biz.dfch.CS.Graylog.Client\biz.dfch.CS.Graylog.Client.csproj">
       <Project>{9ed8ea6a-568c-4a93-9e9e-128a17d4102b}</Project>
       <Name>biz.dfch.CS.Graylog.Client</Name>
     </ProjectReference>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="app.config" />
+    <None Include="Properties\Settings.settings">
+      <Generator>SettingsSingleFileGenerator</Generator>
+      <LastGenOutput>Settings.Designer.cs</LastGenOutput>
+    </None>
   </ItemGroup>
   <Choose>
     <When Condition="'$(VisualStudioVersion)' == '10.0' And '$(IsCodedUITest)' == 'True'">
