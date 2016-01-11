@@ -52,17 +52,17 @@ namespace biz.dfch.CS.Graylog.Client
             this.password = password;
         }
 
-        public ResponseType MakeRequest<ResponseType>(string url, HttpMethod method, object body, int totalAttempts, int baseWaitingMilliseconds)
+        public ResponseType MakeRequest<ResponseType>(string url, HttpMethod method, object body, int totalAttempts, int baseRetryIntervallMilliseconds)
         {
             #region Contract
             Contract.Requires(!string.IsNullOrWhiteSpace(url), "No url defined");
             Contract.Requires(null != method, "No http method defined");
             Contract.Requires(totalAttempts > 0, "Total attempts must be bigger than 0");
-            Contract.Requires(baseWaitingMilliseconds > 0, "Base waiting milliseconds must be bigger than 0");
+            Contract.Requires(baseRetryIntervallMilliseconds > 0, "Base waiting milliseconds must be bigger than 0");
             #endregion Contract
 
             ResponseType result = default(ResponseType);
-            int currentWaitingMillis = baseWaitingMilliseconds;
+            int currentWaitingMillis = baseRetryIntervallMilliseconds;
             for (int actualAttempt = 1; actualAttempt <= totalAttempts; actualAttempt++)
             {
                 try

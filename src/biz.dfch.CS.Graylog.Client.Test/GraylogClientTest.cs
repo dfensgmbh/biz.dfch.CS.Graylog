@@ -31,6 +31,32 @@ namespace biz.dfch.CS.Graylog.Client.Test
         {
         }
 
+        #region Streams
+
+        [TestMethod]
+        [TestCategory("SkipOnTeamCity")]
+        public void GetStreamsTest()
+        {
+            //Test runs only if there is a file TestSettings.txt in the project folders containing the settings in the format
+            //{key}={value}\n
+
+            // Arrange
+            TestSettings settings = TestSettings.Load();
+            string username = settings.GetValue("Username");
+            string password = settings.GetValue("Password");
+
+            GraylogClient graylogClient = new GraylogClient();
+            graylogClient.Login(Properties.Settings.Default.GraylogAPIUrl, username, password, TestEnvironment.TotalAttempts, TestEnvironment.BaseRetryIntervallMilliseconds);
+
+            dynamic streamCollection = graylogClient.GetStreams(TestEnvironment.TotalAttempts, TestEnvironment.BaseRetryIntervallMilliseconds);
+
+            Assert.IsNotNull(streamCollection, "No stream collection received");
+            Assert.IsNotNull(streamCollection.streams, "No streams in stream collection");
+            Assert.IsTrue(streamCollection.streams.Count > 0, "List of streams in stream collection is empty");
+        }
+
+        #endregion Streams
+
         #region Messages
 
         [TestMethod]

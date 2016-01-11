@@ -23,6 +23,7 @@ using System.Net.Http;
 using System.Text;
 using System.Threading.Tasks;
 using System.Web;
+using System.Linq;
 
 namespace biz.dfch.CS.Graylog.Client
 {
@@ -164,52 +165,85 @@ namespace biz.dfch.CS.Graylog.Client
 
         #endregion Login / Logout
 
+        #region Streams
+
+        /// <summary>
+        /// Loads the streams
+        /// </summary>
+        /// <returns>The collection objec containing the streams</returns>
+        public DynamicJsonObject GetStreams()
+        {
+            return this.GetStreams(this.TotalAttempts, this.BaseRetryIntervallMilliseconds);
+        }
+
+        /// <summary>
+        /// Loads the streams
+        /// </summary>
+        /// <param name="totalAttempts">Total attempts that are made for a request</param>
+        /// <param name="baseRetryIntervallMilliseconds">Default base retry intervall milliseconds in job polling</param>
+        /// <returns>The collection objec containing the streams</returns>
+        public DynamicJsonObject GetStreams(int totalAttempts, int baseRetryIntervallMilliseconds)
+        {
+            #region Contract
+            Contract.Requires(this.IsLoggedIn, "Not logged in, call method login first");
+            Contract.Requires(totalAttempts > 0, "TotalAttempts must be greater than 0");
+            Contract.Requires(baseRetryIntervallMilliseconds > 0, "BaseRetryIntervallMilliseconds must be greater than 0");
+            #endregion Contract
+
+            HttpRequestHandler requestHandler = new HttpRequestHandler(this.GraylogUrl, this.Username, this.Password);
+            DynamicJsonObject result = requestHandler.MakeRequest<DynamicJsonObject>(GraylogClient.StreamsUrl, HttpMethod.Get, null, totalAttempts, baseRetryIntervallMilliseconds);
+
+            return result;
+        }
+
+        #endregion Streams
+
         #region Messages
 
         /// <summary>
         /// Searches for Messages
         /// </summary>
-        /// <param name="streamName">The name of the stream in which to search messages</param>
+        /// <param name="streamTitle">The name of the stream in which to search messages</param>
         /// <param name="from">From date for the search range</param>
         /// <param name="to">To date for the search range</param>
-        public DynamicJsonObject SearchMessages(string streamName, DateTime from, DateTime to)
+        public DynamicJsonObject SearchMessages(string streamTitle, DateTime from, DateTime to)
         {
-            return this.SearchMessages(streamName, from, to, (SearchParameters)null, this.TotalAttempts, this.BaseRetryIntervallMilliseconds);
+            return this.SearchMessages(streamTitle, from, to, (SearchParameters)null, this.TotalAttempts, this.BaseRetryIntervallMilliseconds);
         }
 
         /// <summary>
         /// Searches for Messages
         /// </summary>
-        /// <param name="streamName">The name of the stream in which to search messages</param>
+        /// <param name="streamTitle">The name of the stream in which to search messages</param>
         /// <param name="from">From date for the search range</param>
         /// <param name="to">To date for the search range</param>
         /// <param name="totalAttempts">Total attempts that are made for a request</param>
-        /// <param name="baseWaitingMilliseconds">Default base retry intervall milliseconds in job polling</param>
-        public DynamicJsonObject SearchMessages(string streamName, DateTime from, DateTime to, int totalAttempts, int baseRetryIntervallMilliseconds)
+        /// <param name="baseRetryIntervallMilliseconds">Default base retry intervall milliseconds in job polling</param>
+        public DynamicJsonObject SearchMessages(string streamTitle, DateTime from, DateTime to, int totalAttempts, int baseRetryIntervallMilliseconds)
         {
-            return this.SearchMessages(streamName, from, to, (SearchParameters)null, totalAttempts, baseRetryIntervallMilliseconds);
+            return this.SearchMessages(streamTitle, from, to, (SearchParameters)null, totalAttempts, baseRetryIntervallMilliseconds);
         }
 
         /// <summary>
         /// Searches for Messages
         /// </summary>
-        /// <param name="streamName">The name of the stream in which to search messages</param>
+        /// <param name="streamTitle">The name of the stream in which to search messages</param>
         /// <param name="from">From date for the search range</param>
         /// <param name="to">To date for the search range</param>
         /// <param name="parameters">Optional query parameters</param>
         /// <returns>The collection objec containing the found messages</returns>
-        public DynamicJsonObject SearchMessages(string streamName, DateTime from, DateTime to, object parameters)
+        public DynamicJsonObject SearchMessages(string streamTitle, DateTime from, DateTime to, object parameters)
         {
             Contract.Assert((parameters is SearchParameters) || (parameters is Dictionary<string, object>), "Parameters format is not suported (valid formats are 'SearchParameters' or 'Dictionary<string,object>'");
 
             DynamicJsonObject result = null;
             if (parameters is SearchParameters)
             {
-                result = this.SearchMessages(streamName, from, to, (SearchParameters)parameters);
+                result = this.SearchMessages(streamTitle, from, to, (SearchParameters)parameters);
             }
             else if (parameters is Dictionary<string, object>)
             {
-                result = this.SearchMessages(streamName, from, to, (Dictionary<string, object>)parameters);
+                result = this.SearchMessages(streamTitle, from, to, (Dictionary<string, object>)parameters);
             }
 
             return result;
@@ -218,41 +252,41 @@ namespace biz.dfch.CS.Graylog.Client
         /// <summary>
         /// Searches for Messages
         /// </summary>
-        /// <param name="streamName">The name of the stream in which to search messages</param>
+        /// <param name="streamTitle">The name of the stream in which to search messages</param>
         /// <param name="from">From date for the search range</param>
         /// <param name="to">To date for the search range</param>
         /// <param name="parameters">Optional query parameters</param>
         /// <returns>The collection objec containing the found messages</returns>
-        public DynamicJsonObject SearchMessages(string streamName, DateTime from, DateTime to, Dictionary<string,object> parameters)
+        public DynamicJsonObject SearchMessages(string streamTitle, DateTime from, DateTime to, Dictionary<string, object> parameters)
         {
             SearchParameters searchParameters = new SearchParameters(parameters);
-            return this.SearchMessages(streamName, from, to, searchParameters);
+            return this.SearchMessages(streamTitle, from, to, searchParameters);
         }
 
         /// <summary>
         /// Searches for Messages
         /// </summary>
-        /// <param name="streamName">The name of the stream in which to search messages</param>
+        /// <param name="streamTitle">The name of the stream in which to search messages</param>
         /// <param name="from">From date for the search range</param>
         /// <param name="to">To date for the search range</param>
         /// <param name="parameters">Optional query parameters</param>
         /// <returns>The collection objec containing the found messages</returns>
-        public DynamicJsonObject SearchMessages(string streamName, DateTime from, DateTime to, SearchParameters parameters)
+        public DynamicJsonObject SearchMessages(string streamTitle, DateTime from, DateTime to, SearchParameters parameters)
         {
-            return this.SearchMessages(streamName, from, to, parameters, this.TotalAttempts, this.BaseRetryIntervallMilliseconds);
+            return this.SearchMessages(streamTitle, from, to, parameters, this.TotalAttempts, this.BaseRetryIntervallMilliseconds);
         }
 
         /// <summary>
         /// Searches for Messages
         /// </summary>
-        /// <param name="streamName">The name of the stream in which to search messages</param>
+        /// <param name="streamTitle">The name of the stream in which to search messages</param>
         /// <param name="from">From date for the search range</param>
         /// <param name="to">To date for the search range</param>
         /// <param name="parameters">Optional query parameters</param>
         /// <param name="totalAttempts">Total attempts that are made for a request</param>
-        /// <param name="baseWaitingMilliseconds">Default base retry intervall milliseconds in job polling</param>
+        /// <param name="baseRetryIntervallMilliseconds">Default base retry intervall milliseconds in job polling</param>
         /// <returns>The collection objec containing the found messages</returns>
-        public DynamicJsonObject SearchMessages(string streamName, DateTime from, DateTime to, object parameters,
+        public DynamicJsonObject SearchMessages(string streamTitle, DateTime from, DateTime to, object parameters,
             int totalAttempts, int baseRetryIntervallMilliseconds)
         {
             Contract.Assert((parameters is SearchParameters) || (parameters is Dictionary<string, object>), "Parameters format is not suported (valid formats are 'SearchParameters' or 'Dictionary<string,object>'");
@@ -260,11 +294,11 @@ namespace biz.dfch.CS.Graylog.Client
             DynamicJsonObject result = null;
             if (parameters is SearchParameters)
             {
-                result = this.SearchMessages(streamName, from, to, (SearchParameters)parameters, totalAttempts, baseRetryIntervallMilliseconds);
+                result = this.SearchMessages(streamTitle, from, to, (SearchParameters)parameters, totalAttempts, baseRetryIntervallMilliseconds);
             }
             else if (parameters is Dictionary<string, object>)
             {
-                result = this.SearchMessages(streamName, from, to, (Dictionary<string, object>)parameters, totalAttempts, baseRetryIntervallMilliseconds);
+                result = this.SearchMessages(streamTitle, from, to, (Dictionary<string, object>)parameters, totalAttempts, baseRetryIntervallMilliseconds);
             }
 
             return result;
@@ -273,45 +307,50 @@ namespace biz.dfch.CS.Graylog.Client
         /// <summary>
         /// Searches for Messages
         /// </summary>
-        /// <param name="streamName">The name of the stream in which to search messages</param>
+        /// <param name="streamTitle">The name of the stream in which to search messages</param>
         /// <param name="from">From date for the search range</param>
         /// <param name="to">To date for the search range</param>
         /// <param name="parameters">Optional query parameters</param>
         /// <param name="totalAttempts">Total attempts that are made for a request</param>
-        /// <param name="baseWaitingMilliseconds">Default base retry intervall milliseconds in job polling</param>
+        /// <param name="baseRetryIntervallMilliseconds">Default base retry intervall milliseconds in job polling</param>
         /// <returns>The collection objec containing the found messages</returns>
-        public DynamicJsonObject SearchMessages(string streamName, DateTime from, DateTime to, Dictionary<string, object> parameters,
+        public DynamicJsonObject SearchMessages(string streamTitle, DateTime from, DateTime to, Dictionary<string, object> parameters,
             int totalAttempts, int baseRetryIntervallMilliseconds)
         {
             SearchParameters searchParameters = new SearchParameters(parameters);
-            return this.SearchMessages(streamName, from, to, searchParameters, totalAttempts, baseRetryIntervallMilliseconds);
+            return this.SearchMessages(streamTitle, from, to, searchParameters, totalAttempts, baseRetryIntervallMilliseconds);
         }
 
         /// <summary>
         /// Searches for Messages
         /// </summary>
-        /// <param name="streamName">The name of the stream in which to search messages</param>
+        /// <param name="streamTitle">The name of the stream in which to search messages</param>
         /// <param name="from">From date for the search range</param>
         /// <param name="to">To date for the search range</param>
         /// <param name="parameters">Optional query parameters</param>
         /// <param name="totalAttempts">Total attempts that are made for a request</param>
-        /// <param name="baseWaitingMilliseconds">Default base retry intervall milliseconds in job polling</param>
+        /// <param name="baseRetryIntervallMilliseconds">Default base retry intervall milliseconds in job polling</param>
         /// <returns>The collection objec containing the found messages</returns>
-        public DynamicJsonObject SearchMessages(string streamName, DateTime from, DateTime to, SearchParameters parameters, 
+        public DynamicJsonObject SearchMessages(string streamTitle, DateTime from, DateTime to, SearchParameters parameters,
             int totalAttempts, int baseRetryIntervallMilliseconds)
         {
             #region Contract
             Contract.Requires(this.IsLoggedIn, "Not logged in, call method login first");
-            Contract.Requires(!string.IsNullOrEmpty(streamName), "No tenant id defined");
+            Contract.Requires(!string.IsNullOrEmpty(streamTitle), "No stream title defined");
             Contract.Requires(DateTime.MinValue != from, "From date can not be min date");
             Contract.Requires(DateTime.MaxValue != from, "From date can not be max date");
             Contract.Requires(DateTime.MinValue != to, "To date can not be min date");
             Contract.Requires(DateTime.MaxValue != to, "To date can not be max date");
+            Contract.Requires(totalAttempts > 0, "TotalAttempts must be greater than 0");
+            Contract.Requires(baseRetryIntervallMilliseconds > 0, "BaseRetryIntervallMilliseconds must be greater than 0");
             #endregion Contract
 
             //Add Stream filter
-            //ToDo: map tenant ID to streamId
-            string streamQuery = string.Format("streams:\"{0}\"", streamName);
+            dynamic streamCollection = this.GetStreams(totalAttempts, baseRetryIntervallMilliseconds);
+            List<dynamic> streams = streamCollection.streams;
+            dynamic stream = streams.FirstOrDefault(s => s.title == streamTitle);
+            Contract.Assert(null != (object)stream, string.Format("No stream with title '{0}' found", streamTitle));
+            string streamQuery = string.Format("streams:\"{0}\"", stream.id);
 
             //Add optional query parameters
             string optionalParameters = "";
