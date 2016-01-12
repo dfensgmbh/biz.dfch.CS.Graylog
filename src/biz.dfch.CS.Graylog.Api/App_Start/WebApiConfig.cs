@@ -1,7 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Net.Http.Formatting;
 using System.Web.Http;
+using biz.dfch.CS.Graylog.Api.Formatters;
 
 namespace biz.dfch.CS.Graylog.Api
 {
@@ -19,6 +21,10 @@ namespace biz.dfch.CS.Graylog.Api
                 routeTemplate: "api/{controller}/stream/{streamTitle}/{from}/{to}",
                 defaults: new { streamTitle = RouteParameter.Optional, from = RouteParameter.Optional, to = RouteParameter.Optional }
             );
+
+            config.Formatters.Clear();
+            config.Formatters.Add(new DynamicObjectJsonFormatter());
+            config.Formatters.Add(new DynamicObjectXmlFormatter());
 
             // Uncomment the following line of code to enable query support for actions with an IQueryable or IQueryable<T> return type.
             // To avoid processing unexpected or malicious queries, use the validation settings on QueryableAttribute to validate incoming queries.

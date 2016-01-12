@@ -37,7 +37,6 @@ namespace biz.dfch.CS.Graylog.Client
 
             this.values = values;
         }
-
         public string ToJson()
         {
             StringBuilder sb = new StringBuilder("");
@@ -157,6 +156,11 @@ namespace biz.dfch.CS.Graylog.Client
             }
 
             return result;
+        }
+
+        public string ToXml()
+        {
+            throw new NotImplementedException();
         }
     }
 }

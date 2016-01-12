@@ -24,7 +24,7 @@ using System.Web.Script.Serialization;
 
 namespace biz.dfch.CS.Graylog.Client
 {
-    internal class DynamicJsonConverter : JavaScriptConverter
+    public class DynamicJsonConverter : JavaScriptConverter
     {
         public override object Deserialize(IDictionary<string, object> dictionary, Type type, JavaScriptSerializer serializer)
         {

@@ -16,10 +16,8 @@ namespace biz.dfch.CS.Graylog.Api.Controllers
             GraylogClient graylogClient = new GraylogClient();
             //ToDo: Get user name and password from header
             graylogClient.Login(Properties.Settings.Default.GraylogAPIUrl, "", "");
-            DynamicJsonObject messageCollection = graylogClient.GetStreams();
-            HttpResponseMessage response = this.Request.CreateResponse(HttpStatusCode.OK);
-            response.Content = new StringContent(messageCollection.ToJson());
-            return response;
+            DynamicJsonObject streamsCollection = graylogClient.GetStreams();
+            return this.Request.CreateResponse(HttpStatusCode.OK, streamsCollection);
         }
     }
 }
