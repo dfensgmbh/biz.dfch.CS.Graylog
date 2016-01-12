@@ -25,6 +25,7 @@ namespace biz.dfch.CS.Graylog.Api
             config.Formatters.Clear();
             config.Formatters.Add(new DynamicObjectJsonFormatter());
             config.Formatters.Add(new DynamicObjectXmlFormatter());
+            config.Formatters.Add(new CSVFormatter());
 
             // Uncomment the following line of code to enable query support for actions with an IQueryable or IQueryable<T> return type.
             // To avoid processing unexpected or malicious queries, use the validation settings on QueryableAttribute to validate incoming queries.

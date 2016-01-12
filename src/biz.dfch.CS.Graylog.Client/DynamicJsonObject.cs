@@ -27,6 +27,9 @@ namespace biz.dfch.CS.Graylog.Client
 {
     public class DynamicJsonObject : DynamicObject
     {
+        private const string CSVFieldSepparator = ";";
+        private static readonly string CSVLineSepparator = Environment.NewLine;
+
         private readonly IDictionary<string, object> values;
 
         public DynamicJsonObject(IDictionary<string, object> values)
@@ -59,7 +62,10 @@ namespace biz.dfch.CS.Graylog.Client
                     string name = pair.Key;
                     if (value is string)
                     {
-                        sb.AppendFormat("\"{0}\":\"{1}\"", name, value);
+                        string escapedString = (string)value;
+                        escapedString = escapedString.Replace("\\", "\\\\");
+                        escapedString = escapedString.Replace("\"", "\\\"");
+                        sb.AppendFormat("\"{0}\":\"{1}\"", name, escapedString);
                     }
                     else if (value is bool)
                     {
@@ -158,9 +164,105 @@ namespace biz.dfch.CS.Graylog.Client
             return result;
         }
 
-        public string ToXml()
+        public string ToCSV()
         {
-            throw new NotImplementedException();
+            StringBuilder sb = new StringBuilder("");
+            this.ToCSV(sb, null, true, 0);
+            return sb.ToString();
+        }
+
+        private Dictionary<string, int> ToCSV(StringBuilder sb, Dictionary<string, int> fieldNameColumnMapping, bool addHeader, int currentLevel)
+        {
+            if (null == fieldNameColumnMapping)
+            {
+                fieldNameColumnMapping = new Dictionary<string, int>();
+            }
+            int lastUsedColumnIndex = 0;
+            List<CSVValue> csvValues = new List<CSVValue>();
+            StringBuilder listSb = new StringBuilder();
+            StringBuilder subObjectSb = new StringBuilder();
+            foreach (KeyValuePair<string, object> pair in this.values)
+            {
+                if (pair.Value is Dictionary<string, object>)
+                {
+                    Dictionary<string, object> subObject = (Dictionary<string, object>)pair.Value;
+                    if (subObject.Count > 0)
+                    {
+                        DynamicJsonObject.Indent(subObjectSb, currentLevel);
+                        subObjectSb.Append(pair.Key);
+                        subObjectSb.Append(DynamicJsonObject.CSVLineSepparator);
+                        new DynamicJsonObject((IDictionary<string, object>)pair.Value).ToCSV(subObjectSb, null, true, currentLevel + 1);
+                    }
+                }
+                else if (pair.Value is ArrayList)
+                {
+                    ArrayList list = (ArrayList)pair.Value;
+                    if (list.Count > 0)
+                    {
+                        Dictionary<string, int> listFieldNameColumnMapping = new Dictionary<string, int>();
+                        StringBuilder listItemSb = new StringBuilder();
+                        foreach (object listItem in list)
+                        {
+                            if (listItem is Dictionary<string, object>)
+                            {
+                                listFieldNameColumnMapping = new DynamicJsonObject((IDictionary<string, object>)listItem).ToCSV(listItemSb, listFieldNameColumnMapping, false, currentLevel + 1);
+                            }
+                            else
+                            {
+                                DynamicJsonObject.Indent(listItemSb, currentLevel);
+                                listItemSb.Append(listItem.ToString());
+                                listItemSb.Append(DynamicJsonObject.CSVLineSepparator);
+                            }
+                        }
+                        DynamicJsonObject.Indent(listSb, currentLevel);
+                        listSb.Append(pair.Key);
+                        listSb.Append(DynamicJsonObject.CSVLineSepparator);
+                        if (listFieldNameColumnMapping.Count > 0)
+                        {
+                            DynamicJsonObject.Indent(listSb, currentLevel + 1);
+                            listSb.Append(string.Join(DynamicJsonObject.CSVFieldSepparator, listFieldNameColumnMapping.Keys.ToArray()));
+                            listSb.Append(DynamicJsonObject.CSVLineSepparator);
+                        }
+                        listSb.Append(listItemSb);
+                    }
+                }
+                else
+                {
+                    if (!fieldNameColumnMapping.ContainsKey(pair.Key))
+                    {
+                        lastUsedColumnIndex++;
+                        fieldNameColumnMapping.Add(pair.Key, lastUsedColumnIndex);
+                    }
+                    csvValues.Add(new CSVValue(fieldNameColumnMapping[pair.Key], pair.Value));
+                }
+            }
+            if (addHeader)
+            {
+                DynamicJsonObject.Indent(sb, currentLevel);   
+                sb.Append(string.Join(DynamicJsonObject.CSVFieldSepparator, fieldNameColumnMapping.Keys.ToArray()));
+                sb.Append(DynamicJsonObject.CSVLineSepparator);
+            }
+            DynamicJsonObject.Indent(sb, currentLevel); 
+            sb.Append(string.Join(DynamicJsonObject.CSVFieldSepparator, csvValues.OrderBy(csvv => csvv.Position)
+                .Select(csvv => (null == csvv.Value) ? "" : csvv.Value.ToString()).ToArray()));
+            sb.Append(DynamicJsonObject.CSVLineSepparator);
+            if (!string.IsNullOrWhiteSpace(listSb.ToString()))
+            {
+                sb.Append(listSb);
+            }
+            if (!string.IsNullOrWhiteSpace(subObjectSb.ToString()))
+            {
+                sb.Append(subObjectSb);
+            }
+            return fieldNameColumnMapping;
+        }
+
+        private static void Indent(StringBuilder sb,int numberOfFields)
+        {
+            for(int i=0;i<numberOfFields;i++)
+            {
+                sb.Append(DynamicJsonObject.CSVFieldSepparator);
+            }
         }
     }
 }

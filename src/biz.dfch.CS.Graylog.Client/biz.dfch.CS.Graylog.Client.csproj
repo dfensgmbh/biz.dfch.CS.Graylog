@@ -141,6 +141,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="CSVValue.cs" />
     <Compile Include="DynamicJsonConverter.cs" />
     <Compile Include="DynamicJsonObject.cs" />
     <Compile Include="GraylogClient.cs" />

@@ -81,7 +81,6 @@ namespace biz.dfch.CS.Graylog.Client.Test
             Assert.IsNotNull(messageCollection.messages, "No messages in message collection");
             Assert.IsTrue(messageCollection.messages.Count > 0, "List of messages in message collection is empty");
 
-            object date = messageCollection.messages.FirstOrDefault().timestamp;
         }
 
         [TestMethod]

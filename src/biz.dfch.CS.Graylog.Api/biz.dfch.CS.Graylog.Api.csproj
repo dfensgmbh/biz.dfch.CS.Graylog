@@ -190,6 +190,7 @@
     <Compile Include="App_Start\WebApiConfig.cs" />
     <Compile Include="Controllers\MessagesController.cs" />
     <Compile Include="Controllers\StreamsController.cs" />
+    <Compile Include="Formatters\CSVFormatter.cs" />
     <Compile Include="Formatters\DynamicObjectXmlFormatter.cs" />
     <Compile Include="Formatters\DynamicObjectJsonFormatter.cs" />
     <Compile Include="Global.asax.cs">
