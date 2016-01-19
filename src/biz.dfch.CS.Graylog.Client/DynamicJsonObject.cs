@@ -264,5 +264,18 @@ namespace biz.dfch.CS.Graylog.Client
                 sb.Append(DynamicJsonObject.CSVFieldSepparator);
             }
         }
+
+        internal void ApplyFieldFilter(IFieldFilter filter)
+        {
+            IDictionary<string, object> originalValues = this.values.ToDictionary(kvp=>kvp.Key, kvp=>kvp.Value);
+            this.values.Clear();
+            foreach(KeyValuePair<string, object> value in originalValues)
+            {
+                if (!filter.RemoveField(value.Key, value.Value))
+                {
+                    this.values.Add(value.Key, value.Value);
+                }
+            }
+        }
     }
 }
