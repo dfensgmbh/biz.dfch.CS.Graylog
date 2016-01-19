@@ -142,6 +142,21 @@ namespace biz.dfch.CS.Graylog.Client
             return base.TryGetIndex(binder, indexes, out result);
         }
 
+        public override bool TrySetMember(SetMemberBinder binder, object value)
+        {
+            bool valueSet = false;
+            if (!string.IsNullOrEmpty(binder.Name))
+            {
+                if(!this.values.ContainsKey(binder.Name))
+                {
+                    this.values.Add(binder.Name, null);
+                }
+                this.values[binder.Name] = value;
+                valueSet = true;
+            }
+            return valueSet;
+        }
+
         private static object WrapResultObject(object result)
         {
             IDictionary<string, object> dictionary = result as IDictionary<string, object>;

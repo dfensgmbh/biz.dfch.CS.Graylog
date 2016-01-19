@@ -89,6 +89,10 @@ namespace biz.dfch.CS.Graylog.Client
         /// The list of filters to decide which fields should be returned
         /// </summary>
         private Dictionary<string, IFieldFilter> fieldFilters;
+        /// <summary>
+        /// The list of filters to decide which messages should be returned
+        /// </summary>
+        private Dictionary<string, IMessageFilter> messageFilters;
 
         #endregion Properties
 
@@ -103,6 +107,7 @@ namespace biz.dfch.CS.Graylog.Client
             this.BaseRetryIntervallMilliseconds = GraylogClient.BASE_RETRY_INTERVAL_MILLISECONDS;
             this.fieldFilters = new Dictionary<string, IFieldFilter>();
             this.fieldFilters.Add(GraylogClient.FIELD_NAME_BLACKLIST_FILTER, new FieldNameBlacklistFilter());
+            this.messageFilters = new Dictionary<string, IMessageFilter>();
         }
 
         #endregion Constructors
@@ -410,11 +415,16 @@ namespace biz.dfch.CS.Graylog.Client
             HttpRequestHandler requestHandler = new HttpRequestHandler(this.GraylogUrl, this.Username, this.Password);
             dynamic result = requestHandler.MakeRequest<DynamicJsonObject>(url, HttpMethod.Get, null, totalAttempts, baseRetryIntervallMilliseconds);
 
+            result.messages = this.ApplyMessageFilter(result.messages);
             this.ApplyFieldFilter(result.messages);
 
             return result;
         }
 
+        /// <summary>
+        /// Applies all field filters registered
+        /// </summary>
+        /// <param name="objectsToFilter">The list of messages to filter</param>
         private void ApplyFieldFilter(dynamic objectsToFilter)
         {
             if ((null != objectsToFilter) &&(objectsToFilter.Count>0))
@@ -432,6 +442,39 @@ namespace biz.dfch.CS.Graylog.Client
             }
         }
 
+        /// <summary>
+        /// Applies all message filters registered
+        /// </summary>
+        /// <param name="objectsToFilter">The list of messages to filter</param>
+        /// <returns>The filtered list of messages</returns>
+        private dynamic ApplyMessageFilter(dynamic objectsToFilter)
+        {
+            dynamic messages = new ArrayList();
+            if ((null != objectsToFilter) && (objectsToFilter.Count > 0))
+            {
+                foreach (dynamic item in objectsToFilter)
+                {
+                    if ((item is DynamicJsonObject) && (null != item.message))
+                    {
+                        bool removeMessage = false;
+                        foreach (IMessageFilter filter in this.messageFilters.Values)
+                        {
+                            removeMessage = filter.RemoveMessage(item.message);
+                            if(removeMessage)
+                            {
+                                break;
+                            }
+                        }
+                        if (!removeMessage)
+                        {
+                            messages.Add(item);
+                        }
+                    }
+                }
+            }
+            return messages;
+        }
+
         #endregion Messages
 
         #region Manage Filters
@@ -441,10 +484,10 @@ namespace biz.dfch.CS.Graylog.Client
         /// </summary>
         /// <param name="key">The key of the filter</param>
         /// <param name="filter">The filter</param>
-        public void AddFieldFilter(string key, IFieldFilter filter)
+        public void RegisterFieldFilter(string key, IFieldFilter filter)
         {
             #region Contracts
-            Contract.Assert(!string.IsNullOrEmpty(key), "No key for the filter elemente defined");
+            Contract.Assert(!string.IsNullOrEmpty(key), "No key for the filter defined");
             Contract.Assert(null != filter, "No filter defined");
             #endregion Contracts
             
@@ -455,7 +498,7 @@ namespace biz.dfch.CS.Graylog.Client
         /// Removes a filter to decide which fields should be returned
         /// </summary>
         /// <param name="key">The key of the filter to remove</param>
-        public void RemoveFieldFilter(string key)
+        public void UnregisterFieldFilter(string key)
         {
             #region Contracts
             Contract.Assert(GraylogClient.FIELD_NAME_BLACKLIST_FILTER != key, "The field name blacklist filter can not be removed");
@@ -464,6 +507,33 @@ namespace biz.dfch.CS.Graylog.Client
             if ((!string.IsNullOrEmpty(key)) && (this.fieldFilters.ContainsKey(key)))
             {
                 this.fieldFilters.Remove(key);
+            }
+        }
+
+        /// <summary>
+        /// Adds a filter to decide which messages should be returned
+        /// </summary>
+        /// <param name="key">The key of the filter</param>
+        /// <param name="filter">The filter</param>
+        public void RegisterMessageFilter(string key, IMessageFilter filter)
+        {
+            #region Contracts
+            Contract.Assert(!string.IsNullOrEmpty(key), "No key for the filter defined");
+            Contract.Assert(null != filter, "No filter defined");
+            #endregion Contracts
+
+            this.messageFilters.Add(key, filter);
+        }
+
+        /// <summary>
+        /// Removes a filter to decide which messages should be returned
+        /// </summary>
+        /// <param name="key">The key of the filter to remove</param>
+        public void UnregisterMessageFilter(string key)
+        {
+            if ((!string.IsNullOrEmpty(key)) && (this.messageFilters.ContainsKey(key)))
+            {
+                this.messageFilters.Remove(key);
             }
         }
 
