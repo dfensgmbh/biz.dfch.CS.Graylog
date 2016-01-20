@@ -252,5 +252,128 @@ namespace biz.dfch.CS.Graylog.Client.Test
 
         #endregion Messages
 
+        #region Filters
+
+        [TestMethod]
+        [TestCategory("SkipOnTeamCity")]
+        public void SearchMessagesMessageFiltersTest()
+        {
+            //Test runs only if there is a file TestSettings.txt in the project folders containing the settings in the format
+            //{key}={value}\n
+
+            // Arrange
+            TestSettings settings = TestSettings.Load();
+            string username = settings.GetValue("Username");
+            string password = settings.GetValue("Password");
+            string streamName = settings.GetValue("StreamName");
+
+            GraylogClient graylogClient = new GraylogClient();
+            graylogClient.RegisterMessageFilter("MessageTextFilter1", new MessageTextFilter("4 ms"));
+            graylogClient.Login(Properties.Settings.Default.GraylogAPIUrl, username, password, TestEnvironment.TotalAttempts, TestEnvironment.BaseRetryIntervallMilliseconds);
+
+            dynamic messageCollection = graylogClient.SearchMessages(streamName, new DateTime(2015, 1, 1), new DateTime(2016, 1, 1), TestEnvironment.TotalAttempts, TestEnvironment.BaseRetryIntervallMilliseconds);
+
+            Assert.IsNotNull(messageCollection, "No message collection received");
+            Assert.IsNotNull(messageCollection.messages, "No messages in message collection");
+            Assert.IsTrue(messageCollection.messages.Count > 0, "List of messages in message collection is empty");
+            foreach (dynamic messageItem in messageCollection.messages)
+            {
+                Assert.IsTrue(messageItem.message.message.Contains("4 ms"));
+            }
+        }
+
+        [TestMethod]
+        [TestCategory("SkipOnTeamCity")]
+        public void SearchMessagesMultiMessageFiltersTest()
+        {
+            //Test runs only if there is a file TestSettings.txt in the project folders containing the settings in the format
+            //{key}={value}\n
+
+            // Arrange
+            TestSettings settings = TestSettings.Load();
+            string username = settings.GetValue("Username");
+            string password = settings.GetValue("Password");
+            string streamName = settings.GetValue("StreamName");
+
+            GraylogClient graylogClient = new GraylogClient();
+            graylogClient.RegisterMessageFilter("MessageTextFilter1", new MessageTextFilter("4 ms"));
+            graylogClient.RegisterMessageFilter("MessageTextFilter2", new MessageTextFilter("0.7"));
+            graylogClient.Login(Properties.Settings.Default.GraylogAPIUrl, username, password, TestEnvironment.TotalAttempts, TestEnvironment.BaseRetryIntervallMilliseconds);
+
+            dynamic messageCollection = graylogClient.SearchMessages(streamName, new DateTime(2015, 1, 1), new DateTime(2016, 1, 1), TestEnvironment.TotalAttempts, TestEnvironment.BaseRetryIntervallMilliseconds);
+
+            Assert.IsNotNull(messageCollection, "No message collection received");
+            Assert.IsNotNull(messageCollection.messages, "No messages in message collection");
+            Assert.IsTrue(messageCollection.messages.Count > 0, "List of messages in message collection is empty");
+            foreach (dynamic messageItem in messageCollection.messages)
+            {
+                Assert.IsTrue(messageItem.message.message.Contains("4 ms"));
+                Assert.IsTrue(messageItem.message.message.Contains("0.7"));
+            }
+        }
+
+        [TestMethod]
+        [TestCategory("SkipOnTeamCity")]
+        public void SearchMessagesFieldFiltersTest()
+        {
+            //Test runs only if there is a file TestSettings.txt in the project folders containing the settings in the format
+            //{key}={value}\n
+
+            // Arrange
+            TestSettings settings = TestSettings.Load();
+            string username = settings.GetValue("Username");
+            string password = settings.GetValue("Password");
+            string streamName = settings.GetValue("StreamName");
+
+            GraylogClient graylogClient = new GraylogClient();
+            graylogClient.RegisterFieldFilter("FieldNameFilter1", new FieldNameFilter(new List<string> { "message", "hostname" }));
+            graylogClient.Login(Properties.Settings.Default.GraylogAPIUrl, username, password, TestEnvironment.TotalAttempts, TestEnvironment.BaseRetryIntervallMilliseconds);
+
+            dynamic messageCollection = graylogClient.SearchMessages(streamName, new DateTime(2015, 1, 1), new DateTime(2016, 1, 1), TestEnvironment.TotalAttempts, TestEnvironment.BaseRetryIntervallMilliseconds);
+
+            Assert.IsNotNull(messageCollection, "No message collection received");
+            Assert.IsNotNull(messageCollection.messages, "No messages in message collection");
+            Assert.IsTrue(messageCollection.messages.Count > 0, "List of messages in message collection is empty");
+            foreach (dynamic messageItem in messageCollection.messages)
+            {
+                Assert.IsNotNull(messageItem.message.message);
+                Assert.IsNotNull(messageItem.message.hostname);
+                Assert.IsNull(messageItem.message.state, "The state field should be filtered");
+            }
+        }
+
+        [TestMethod]
+        [TestCategory("SkipOnTeamCity")]
+        public void SearchMessagesMultiFieldFiltersTest()
+        {
+            //Test runs only if there is a file TestSettings.txt in the project folders containing the settings in the format
+            //{key}={value}\n
+
+            // Arrange
+            TestSettings settings = TestSettings.Load();
+            string username = settings.GetValue("Username");
+            string password = settings.GetValue("Password");
+            string streamName = settings.GetValue("StreamName");
+
+            GraylogClient graylogClient = new GraylogClient();
+            graylogClient.RegisterFieldFilter("FieldNameFilter1", new FieldNameFilter(new List<string> { "message", "hostname" }));
+            graylogClient.RegisterFieldFilter("FieldNameFilter2", new FieldNameFilter(new List<string> { "message", "state" }));
+            graylogClient.Login(Properties.Settings.Default.GraylogAPIUrl, username, password, TestEnvironment.TotalAttempts, TestEnvironment.BaseRetryIntervallMilliseconds);
+
+            dynamic messageCollection = graylogClient.SearchMessages(streamName, new DateTime(2015, 1, 1), new DateTime(2016, 1, 1), TestEnvironment.TotalAttempts, TestEnvironment.BaseRetryIntervallMilliseconds);
+
+            Assert.IsNotNull(messageCollection, "No message collection received");
+            Assert.IsNotNull(messageCollection.messages, "No messages in message collection");
+            Assert.IsTrue(messageCollection.messages.Count > 0, "List of messages in message collection is empty");
+            foreach (dynamic messageItem in messageCollection.messages)
+            {
+                Assert.IsNotNull(messageItem.message.message);
+                Assert.IsNull(messageItem.message.hostname, "The hostname field should be filtered");
+                Assert.IsNull(messageItem.message.state, "The state field should be filtered");
+            }
+        }
+
+        #endregion Filters
+
     }
 }

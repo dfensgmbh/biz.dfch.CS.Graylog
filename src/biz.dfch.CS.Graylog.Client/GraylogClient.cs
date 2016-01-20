@@ -24,6 +24,7 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Web;
 using System.Linq;
+using System.Collections;
 
 namespace biz.dfch.CS.Graylog.Client
 {
@@ -50,6 +51,10 @@ namespace biz.dfch.CS.Graylog.Client
         /// Url parameter date format
         /// </summary>
         private const string URL_PARAMETER_DATE_FORMAT = "yyyy-MM-dd HH:mm:ss";
+        /// <summary>
+        /// The key of the field name blacklist filter
+        /// </summary>
+        private const string FIELD_NAME_BLACKLIST_FILTER = "biz.dfch.CS.Graylog.Client.FieldBlacklistFilter";
 
         #endregion Constants
 
@@ -80,6 +85,15 @@ namespace biz.dfch.CS.Graylog.Client
         /// </summary>
         public bool IsLoggedIn { get; private set; }
 
+        /// <summary>
+        /// The list of filters to decide which fields should be returned
+        /// </summary>
+        private Dictionary<string, IFieldFilter> fieldFilters;
+        /// <summary>
+        /// The list of filters to decide which messages should be returned
+        /// </summary>
+        private Dictionary<string, IMessageFilter> messageFilters;
+
         #endregion Properties
 
         #region Constructors
@@ -91,6 +105,9 @@ namespace biz.dfch.CS.Graylog.Client
         {
             this.TotalAttempts = GraylogClient.TOTAL_ATTEMPTS;
             this.BaseRetryIntervallMilliseconds = GraylogClient.BASE_RETRY_INTERVAL_MILLISECONDS;
+            this.fieldFilters = new Dictionary<string, IFieldFilter>();
+            this.fieldFilters.Add(GraylogClient.FIELD_NAME_BLACKLIST_FILTER, new FieldNameBlacklistFilter());
+            this.messageFilters = new Dictionary<string, IMessageFilter>();
         }
 
         #endregion Constructors
@@ -396,11 +413,130 @@ namespace biz.dfch.CS.Graylog.Client
                 HttpUtility.UrlEncode(to.ToString(GraylogClient.URL_PARAMETER_DATE_FORMAT)), optionalParameters);
 
             HttpRequestHandler requestHandler = new HttpRequestHandler(this.GraylogUrl, this.Username, this.Password);
-            DynamicJsonObject result = requestHandler.MakeRequest<DynamicJsonObject>(url, HttpMethod.Get, null, totalAttempts, baseRetryIntervallMilliseconds);
+            dynamic result = requestHandler.MakeRequest<DynamicJsonObject>(url, HttpMethod.Get, null, totalAttempts, baseRetryIntervallMilliseconds);
+
+            result.messages = this.ApplyMessageFilter(result.messages);
+            this.ApplyFieldFilter(result.messages);
 
             return result;
         }
 
+        /// <summary>
+        /// Applies all field filters registered
+        /// </summary>
+        /// <param name="objectsToFilter">The list of messages to filter</param>
+        private void ApplyFieldFilter(dynamic objectsToFilter)
+        {
+            if ((null != objectsToFilter) &&(objectsToFilter.Count>0))
+            {
+                foreach (dynamic item in objectsToFilter)
+                {
+                    if ((item is DynamicJsonObject)&&(null!=item.message))
+                    {
+                        foreach (IFieldFilter filter in this.fieldFilters.Values)
+                        {
+                            ((DynamicJsonObject)item.message).ApplyFieldFilter(filter);
+                        }
+                    }
+                }
+            }
+        }
+
+        /// <summary>
+        /// Applies all message filters registered
+        /// </summary>
+        /// <param name="objectsToFilter">The list of messages to filter</param>
+        /// <returns>The filtered list of messages</returns>
+        private dynamic ApplyMessageFilter(dynamic objectsToFilter)
+        {
+            dynamic messages = new ArrayList();
+            if ((null != objectsToFilter) && (objectsToFilter.Count > 0))
+            {
+                foreach (dynamic item in objectsToFilter)
+                {
+                    if ((item is DynamicJsonObject) && (null != item.message))
+                    {
+                        bool removeMessage = false;
+                        foreach (IMessageFilter filter in this.messageFilters.Values)
+                        {
+                            removeMessage = filter.RemoveMessage(item.message);
+                            if(removeMessage)
+                            {
+                                break;
+                            }
+                        }
+                        if (!removeMessage)
+                        {
+                            messages.Add(item);
+                        }
+                    }
+                }
+            }
+            return messages;
+        }
+
         #endregion Messages
+
+        #region Manage Filters
+
+        /// <summary>
+        /// Adds a filter to decide which fields should be returned
+        /// </summary>
+        /// <param name="key">The key of the filter</param>
+        /// <param name="filter">The filter</param>
+        public void RegisterFieldFilter(string key, IFieldFilter filter)
+        {
+            #region Contracts
+            Contract.Assert(!string.IsNullOrEmpty(key), "No key for the filter defined");
+            Contract.Assert(null != filter, "No filter defined");
+            #endregion Contracts
+            
+            this.fieldFilters.Add(key, filter);
+        }
+
+        /// <summary>
+        /// Removes a filter to decide which fields should be returned
+        /// </summary>
+        /// <param name="key">The key of the filter to remove</param>
+        public void UnregisterFieldFilter(string key)
+        {
+            #region Contracts
+            Contract.Assert(GraylogClient.FIELD_NAME_BLACKLIST_FILTER != key, "The field name blacklist filter can not be removed");
+            #endregion Contracts
+
+            if ((!string.IsNullOrEmpty(key)) && (this.fieldFilters.ContainsKey(key)))
+            {
+                this.fieldFilters.Remove(key);
+            }
+        }
+
+        /// <summary>
+        /// Adds a filter to decide which messages should be returned
+        /// </summary>
+        /// <param name="key">The key of the filter</param>
+        /// <param name="filter">The filter</param>
+        public void RegisterMessageFilter(string key, IMessageFilter filter)
+        {
+            #region Contracts
+            Contract.Assert(!string.IsNullOrEmpty(key), "No key for the filter defined");
+            Contract.Assert(null != filter, "No filter defined");
+            #endregion Contracts
+
+            this.messageFilters.Add(key, filter);
+        }
+
+        /// <summary>
+        /// Removes a filter to decide which messages should be returned
+        /// </summary>
+        /// <param name="key">The key of the filter to remove</param>
+        public void UnregisterMessageFilter(string key)
+        {
+            if ((!string.IsNullOrEmpty(key)) && (this.messageFilters.ContainsKey(key)))
+            {
+                this.messageFilters.Remove(key);
+            }
+        }
+
+        #endregion Manage Filters
     }
 }

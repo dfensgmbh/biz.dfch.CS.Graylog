@@ -142,6 +142,21 @@ namespace biz.dfch.CS.Graylog.Client
             return base.TryGetIndex(binder, indexes, out result);
         }
 
+        public override bool TrySetMember(SetMemberBinder binder, object value)
+        {
+            bool valueSet = false;
+            if (!string.IsNullOrEmpty(binder.Name))
+            {
+                if(!this.values.ContainsKey(binder.Name))
+                {
+                    this.values.Add(binder.Name, null);
+                }
+                this.values[binder.Name] = value;
+                valueSet = true;
+            }
+            return valueSet;
+        }
+
         private static object WrapResultObject(object result)
         {
             IDictionary<string, object> dictionary = result as IDictionary<string, object>;
@@ -262,6 +277,19 @@ namespace biz.dfch.CS.Graylog.Client
             for(int i=0;i<numberOfFields;i++)
             {
                 sb.Append(DynamicJsonObject.CSVFieldSepparator);
+            }
+        }
+
+        internal void ApplyFieldFilter(IFieldFilter filter)
+        {
+            IDictionary<string, object> originalValues = this.values.ToDictionary(kvp=>kvp.Key, kvp=>kvp.Value);
+            this.values.Clear();
+            foreach(KeyValuePair<string, object> value in originalValues)
+            {
+                if (!filter.RemoveField(value.Key, value.Value))
+                {
+                    this.values.Add(value.Key, value.Value);
+                }
             }
         }
     }
