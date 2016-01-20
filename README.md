@@ -13,3 +13,4 @@ d-fens GmbH, General-Guisan-Strasse 6, CH-6300 Zug, Switzerland
 * Get it on [NuGet](https://www.nuget.org/packages/biz.dfch.CS.Graylog.Client/)
 
 * See [Releases](https://github.com/dfensgmbh/biz.dfch.CS.Graylog/releases) and [Tags](https://github.com/dfensgmbh/biz.dfch.CS.Graylog/tags) on [GitHub](https://github.com/dfensgmbh/biz.dfch.CS.Graylog)
+
