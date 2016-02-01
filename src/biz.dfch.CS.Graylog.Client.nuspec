@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="utf-8"?>
+<package xmlns="http://schemas.microsoft.com/packaging/2011/08/nuspec.xsd">
+    <metadata>
+        <id>biz.dfch.CS.Graylog.Client</id>
+        <version>1.0.0</version>
+        <title>biz.dfch.CS.Graylog.Client</title>
+        <authors>d-fens GmbH</authors>
+        <owners>d-fens GmbH</owners>
+		<licenseUrl>https://github.com/dfensgmbh/biz.dfch.CS.Graylog/blob/master/LICENSE</licenseUrl>
+        <projectUrl>https://github.com/dfensgmbh/biz.dfch.CS.Graylog.git</projectUrl>
+        <iconUrl>https://raw.githubusercontent.com/dfensgmbh/biz.dfch.CS.Graylog/master/logo-32x32.png</iconUrl>
+        <requireLicenseAcceptance>true</requireLicenseAcceptance>
+        <description>biz.dfch.CS.Graylog.Client
+========================
+
+C#/.NET client for [Graylog](https://www.graylog.org/)
+
+d-fens GmbH, General-Guisan-Strasse 6, CH-6300 Zug, Switzerland
+
+## Download
+
+* Get it on [NuGet](https://www.nuget.org/packages/biz.dfch.CS.Graylog.Client/)
+
+* See [Releases](https://github.com/dfensgmbh/biz.dfch.CS.Graylog/releases) and [Tags](https://github.com/dfensgmbh/biz.dfch.CS.Graylog/tags) on [GitHub](https://github.com/dfensgmbh/biz.dfch.CS.Graylog)
+		</description>
+        <summary>C#/.NET client for Graylog</summary>
+        <releaseNotes>20160201
+* Initial release
+</releaseNotes>
+        <copyright>Copyright © 2016 d-fens GmbH</copyright>
+        <tags>dfch Graylog Logging Client C#</tags>
+        <dependencies>
+			<dependency id="biz.dfch.CS.System.Utilities" version="2.0.0" />
+			<dependency id="log4net" version="2.0.3" />
+			<dependency id="Newtonsoft.Json" version="8.0.2" />
+        </dependencies>
+    </metadata>
+	<files>
+		<file src="biz.dfch.CS.Graylog.Client\bin\Release\biz.dfch.CS.Graylog.Client.dll" target="lib\" />
+	</files>
+</package>
