@@ -4,7 +4,7 @@
 [![NuGet downloads](https://img.shields.io/nuget/dt/biz.dfch.CS.Graylog.Client.svg)](https://www.nuget.org/packages/biz.dfch.CS.Graylog.Client/)
 [![Version](https://img.shields.io/nuget/v/biz.dfch.CS.Graylog.Client.svg)](https://www.nuget.org/packages/biz.dfch.CS.Graylog.Client/)
 
-A C#/.NET client and API for Graylog
+A C#/.NET client and API for [Graylog](https://www.graylog.org/)
 
 d-fens GmbH, General-Guisan-Strasse 6, CH-6300 Zug, Switzerland
 
