@@ -14,3 +14,6 @@ d-fens GmbH, General-Guisan-Strasse 6, CH-6300 Zug, Switzerland
 
 * See [Releases](https://github.com/dfensgmbh/biz.dfch.CS.Graylog/releases) and [Tags](https://github.com/dfensgmbh/biz.dfch.CS.Graylog/tags) on [GitHub](https://github.com/dfensgmbh/biz.dfch.CS.Graylog)
 
+[![TeamCity Logo](https://github.com/dfensgmbh/biz.dfch.CS.Graylog/blob/develop/TeamCity.png)](https://www.jetbrains.com/teamcity/)
+
+Built and released with TeamCity
